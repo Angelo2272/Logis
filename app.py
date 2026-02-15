@@ -34,7 +34,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 4. CABECERA ---
-st.title("Buskaia Gastos 💰")
+st.title("Gastos 💰")
 st.markdown("<p style='color: #64748b;'>Gestiona tus finanzas automáticamente</p>", unsafe_allow_html=True)
 
 # --- 5. AUTOMATIZACIÓN DE GMAIL (AUTO-SCAN) ---
