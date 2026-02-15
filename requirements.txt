@@ -2,3 +2,5 @@ streamlit
 groq
 Pillow
 requests
+pandas
+st-gsheets-connection
