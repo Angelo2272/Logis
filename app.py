@@ -34,7 +34,7 @@ st.title("Gastos 💰")
 st.markdown("<p class='caption-text'>Gestiona tus finanzas automáticamente</p>", unsafe_allow_html=True)
 
 # El selector de usuario es lo primero que vemos
-usuario_activo = st.radio("👤 ¿Quién registra el gasto?", ["Yo", "Novia"], horizontal=True)
+usuario_activo = st.radio("👤 ¿Quién registra el gasto?", ["Chao", "Kath","Casa"], horizontal=True)
 
 # --- 5. AUTOMATIZACIÓN DE GMAIL ---
 st.subheader("🤖 Automatización")
