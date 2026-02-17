@@ -6,19 +6,19 @@ import PIL.Image
 import json
 import re
 
+# --- FUNCIÓN 1: EXTRACCIÓN DESDE IMAGEN (VISIÓN) ---
 def extraer_datos_foto(ruta_imagen):
     try:
         client = Groq(api_key=st.secrets["GROQ_KEY"])
 
-        # 1. Procesar imagen (Subimos un poco la resolución para el Lupa)
+        # 1. Procesar imagen
         img = PIL.Image.open(ruta_imagen)
-        img.thumbnail((1200, 1200)) # Más resolución = mejor lectura de números pequeños
+        img.thumbnail((1200, 1200)) 
         buffered = BytesIO()
         img.save(buffered, format="JPEG", quality=95)
         img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-        # 2. Petición al modelo Llama 4 Scout
-        # IMPORTANTE: Forzamos el formato JSON en el sistema
+        # 2. Petición al modelo Llama 4 Scout (Visión)
         completion = client.chat.completions.create(
             model="meta-llama/llama-4-scout-17b-16e-instruct",
             messages=[
@@ -38,23 +38,20 @@ def extraer_datos_foto(ruta_imagen):
                     ]
                 }
             ],
-            temperature=0, # Cero absoluto para máxima precisión numérica
-            response_format={"type": "json_object"} # Esto evita que la IA hable de más
+            temperature=0, 
+            response_format={"type": "json_object"} 
         )
 
         res_texto = completion.choices[0].message.content
         datos = json.loads(res_texto)
 
-        # 3. Normalización inteligente (Sin valores quemados)
-        # Extraemos el total buscando el número más probable si el JSON viene raro
+        # 3. Normalización del total
         total_final = 0.0
         t_raw = datos.get("total") or datos.get("amount")
         
         if t_raw:
             if isinstance(t_raw, str):
-                # Limpiamos el texto "4,51€" -> "4.51"
                 limpio = re.sub(r'[^\d.,]', '', t_raw).replace(',', '.')
-                # Si hay dos puntos (ej 1.250.50), nos quedamos con el último para decimales
                 if limpio.count('.') > 1:
                     partes = limpio.split('.')
                     limpio = "".join(partes[:-1]) + "." + partes[-1]
@@ -69,5 +66,32 @@ def extraer_datos_foto(ruta_imagen):
         }
 
     except Exception as e:
-        st.error(f"Error con Llama 4 Scout: {e}")
-        return {"establecimiento": "Error", "fecha": "", "total": 0.0}
+        st.error(f"Error con Llama 4 Scout (Visión): {e}")
+        return {"establecimiento": "Error", "fecha": "2026-02-15", "total": 0.0}
+
+# --- FUNCIÓN 2: ASESOR FINANCIERO (TEXTO) ---
+def analizar_gastos_ia(resumen_texto):
+    """
+    Analiza el resumen de texto enviado desde el DataFrame de Streamlit.
+    """
+    try:
+        client = Groq(api_key=st.secrets["GROQ_KEY"])
+        
+        prompt = f"""
+        Eres un asesor financiero para Chao, Kath y su Casa. 
+        Analiza estos totales del mes y sé muy breve (máx 80 palabras):
+        {resumen_texto}
+        
+        Dime: 1. Quién lleva el mando del gasto. 2. Alerta de categoría alta. 3.hazme un resumen general de nuestros habitos de compras. 
+        Usa emojis.
+        """
+        
+        completion = client.chat.completions.create(
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        return completion.choices[0].message.content
+        
+    except Exception as e:
+        return f"La IA se ha ido de rebajas... (Error: {e})"
