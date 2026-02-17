@@ -14,7 +14,7 @@ from database import inicializar_db, guardar_movimiento, conectar_sheet
 inicializar_db()
 
 # --- 3. ESTILO UI (Adaptable y Moderno) ---
-st.set_page_config(page_title="Buskaia Finance", layout="centered")
+st.set_page_config(page_title="Logis Finance", layout="centered")
 
 st.markdown("""
     <style>
